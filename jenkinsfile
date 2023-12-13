@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'hungvietlai/my_todo_app'
+        DOCKER_CREDENTIALS = 'DockerHubCredentials'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+            git url: 'https://github.com/hungvietlai/my_todo_project_aws.git', branch: 'master'
+            sh 'ls -la'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Running tests in docker container'
+                sh '''
+                docker run -rm -v /var/jenkins_home/workspace/my_todo_app_aws:/app -w /app python:3.10-alpine /bin/sh -c "
+                ls -la /app;
+                cd todo_app;
+                python test_app.py"
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build "${DOCKER_IMAGE}:$BUILD_ID"
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS}") {
+                        docker.image("${DOCKER_IMAGE}:$BUILD_ID").push()
+                    }
+                }
+            }
+        }
+    }
+}
