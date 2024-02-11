@@ -4,6 +4,10 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'hungvietlai/my_todo_app'
         DOCKER_CREDENTIALS = 'DockerHubCredentials'
+        AWS_DEFAULT_REGION = 'us-east-1'
+        AWS_ACCESS_KEY_ID = credentials('AWS_credentials')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_credentials')
+        EKS_CLUSTER_NAME = 'my-todo-app-cluster'
     }
 
     stages {
@@ -17,7 +21,7 @@ pipeline {
             steps {
                 echo 'Running tests in docker container'
                 sh '''
-                docker run -rm -v /var/jenkins_home/workspace/my_todo_app_aws:/app -w /app python:3.10-alpine /bin/sh -c "
+                docker run --rm -v /var/jenkins_home/workspace/my_todo_app_aws:/app -w /app python:3.10-alpine /bin/sh -c "
                 ls -la /app;
                 cd todo_app;
                 python test_app.py"
@@ -40,6 +44,26 @@ pipeline {
                         docker.image("${DOCKER_IMAGE}:$BUILD_ID").push()
                     }
                 }
+            }
+        }
+
+        stage('Configure AWS CLI') {
+            steps {
+                sh 'aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID'
+                sh 'aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY'
+                sh 'aws configure set default.region $AWS_DEFAULT_REGION'
+            }
+        }
+
+        stage('Set Kubectl Context') {
+            steps {
+                sh 'aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name $EKS_CLUSTER_NAME'
+            }
+        }
+
+        stage('Deploy with Helm') {
+            steps {
+                sh 'helm upgrade --install todo-app todo_app_charts/ --set image.repository=${DOCKER_IMAGE},image.tag=${BUILD_ID}'
             }
         }
     }
