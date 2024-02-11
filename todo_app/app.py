@@ -1,8 +1,27 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+import os
+import json
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todos.db'
+
+credentials_path = '/etc/secrets/db_credentials.json'
+
+def load_db_credentials(path):
+    with open(path) as f:
+        return json.load(f)
+
+if os.path.exists(credentials_path):
+    creds = load_db_credentials(credentials_path)
+    db_user = creds.get('username')
+    db_pass = creds.get('password')
+    db_host = creds.get('host')
+    db_name = creds.get('dbname')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/{db_name}"
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI', 'sqlite:///todos.db')
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 class Todo(db.Model):
