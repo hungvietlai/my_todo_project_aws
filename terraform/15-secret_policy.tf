@@ -11,7 +11,7 @@ resource "aws_iam_policy" "my_secret_policy" {
           "secretsmanager:DescribeSecret",
         ],
         "Effect"   : "Allow",
-        "Resource" : "arn:aws:secretsmanager:us-east-1:906734544038:secret:todo_app_mysql-toS3Fo"
+        "Resource" : "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:<SECRET_NAME>"
       },
     ]
   })
