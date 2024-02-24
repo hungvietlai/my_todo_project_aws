@@ -215,4 +215,4 @@ This project is licensed under the MIT License. For the full text of the license
 
 ### Image 
 ![infra-image](https://github.com/hungvietlai/my_todo_project_aws/blob/master/images/project_pluralith-local-project%252Frun_0915263%252Frun_0915263_1708381064633.png)
-![drawing-app-image](https://github.com/hungvietlai/my-drawing-app/blob/main/images/my_drawing_app.png)
+![drawing-app-image](https://github.com/hungvietlai/my_todo_project_aws/blob/master/images/todo_app.png)
